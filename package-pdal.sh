@@ -21,7 +21,7 @@ rsync -ax /build/usr/share/gdal $DEPLOY_DIR/share/
 rsync -ax /build/usr/share/proj $DEPLOY_DIR/share/
 
 cd $DEPLOY_DIR
-zip -ruq ../$PACKAGE_NAME ./
+zip --symlinks -ruq ../$PACKAGE_NAME ./
 rm -rf $DEPLOY_DIR
 
 
