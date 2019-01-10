@@ -48,7 +48,7 @@ Instructions
       Setting execution access to public for version 6 for Lambda layer pdal
       Layer pdal is available at 'arn:aws:lambda:us-east-1:163178234892:layer:pdal'
 
-_`Lambda Layers`: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
-_`GeoLambda`: https://github.com/developmentseed/geolambda
-_`jq`: https://stedolan.github.io/jq/
-_`PDAL`: https://pdal.io
+.. _`Lambda Layers`: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
+.. _`GeoLambda`: https://github.com/developmentseed/geolambda
+.. _`jq`: https://stedolan.github.io/jq/
+.. _`PDAL`: https://pdal.io
