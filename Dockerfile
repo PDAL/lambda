@@ -1,13 +1,13 @@
-FROM lambci/lambda:build-python3.6 as builder
+FROM lambci/lambda:build-python3.7 as builder
 
 ARG http_proxy
 ARG CURL_VERSION=7.63.0
-ARG GDAL_VERSION=2.4.0
-ARG GEOS_VERSION=3.7.1
-ARG PROJ_VERSION=5.1.0
-ARG LASZIP_VERSION=3.2.9
-ARG GEOTIFF_VERSION=1.4.3
-ARG PDAL_VERSION=1.8.0
+ARG GDAL_VERSION=3.0.0
+ARG GEOS_VERSION=3.7.2
+ARG PROJ_VERSION=6.0.0
+ARG LASZIP_VERSION=3.4.1
+ARG GEOTIFF_VERSION=1.5.1
+ARG PDAL_VERSION=1.9.1
 ARG DESTDIR="/build"
 ARG PREFIX="/usr"
 
@@ -17,13 +17,30 @@ RUN \
   yum install -y \
     automake16 \
     libpng-devel \
-    nasm wget tar gcc zlib-devel gcc-c++ curl-devel zip libjpeg-devel rsync git ssh bzip2 automake \
+    nasm wget tar zlib-devel curl-devel zip libjpeg-devel rsync git ssh bzip2 automake \
         glib2-devel libtiff-devel pkg-config libcurl-devel;   # required for pkg-config
 
+
+
 RUN \
-    wget https://github.com/Kitware/CMake/releases/download/v3.13.2/cmake-3.13.2.tar.gz; \
-    tar -zxvf cmake-3.13.2.tar.gz; \
-    cd cmake-3.13.2; \
+    yum install -y iso-codes && \
+    curl -O http://vault.centos.org/6.5/SCL/x86_64/scl-utils/scl-utils-20120927-11.el6.centos.alt.x86_64.rpm && \
+    curl -O http://vault.centos.org/6.5/SCL/x86_64/scl-utils/scl-utils-build-20120927-11.el6.centos.alt.x86_64.rpm && \
+    curl -O http://mirror.centos.org/centos/6/extras/x86_64/Packages/centos-release-scl-rh-2-3.el6.centos.noarch.rpm && \
+    curl -O http://mirror.centos.org/centos/6/extras/x86_64/Packages/centos-release-scl-7-3.el6.centos.noarch.rpm && \
+    rpm -Uvh *.rpm  && \
+    rm *.rpm &&  \
+    yum install -y devtoolset-7-gcc-c++ devtoolset-7-make devtoolset-7-build ;
+
+SHELL [ "/usr/bin/scl", "enable", "devtoolset-7"]
+
+RUN gcc --version
+
+
+RUN \
+    wget https://github.com/Kitware/CMake/releases/download/v3.14.3/cmake-3.14.3.tar.gz; \
+    tar -zxvf cmake-3.14.3.tar.gz; \
+    cd cmake-3.14.3; \
     ./bootstrap --prefix=/usr ;\
     make ;\
     make install DESTDIR=/
@@ -60,7 +77,7 @@ RUN \
     rm -rf proj-$PROJ_VERSION proj-$PROJ_VERSION.tar.gz
 
 RUN \
-    wget https://download.osgeo.org/geotiff/libgeotiff/libgeotiff-$GEOTIFF_VERSION.tar.gz; \
+    wget https://github.com/OSGeo/libgeotiff/releases/download/$GEOTIFF_VERSION/libgeotiff-$GEOTIFF_VERSION.tar.gz; \
     tar -xzvf libgeotiff-$GEOTIFF_VERSION.tar.gz; \
     cd libgeotiff-$GEOTIFF_VERSION; \
     ./configure \
