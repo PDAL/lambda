@@ -8,6 +8,8 @@ ARG PROJ_VERSION=6.0.0
 ARG LASZIP_VERSION=3.4.1
 ARG GEOTIFF_VERSION=1.5.1
 ARG PDAL_VERSION=1.9.1
+ARG PDAL_PYTHON_VERSION=2.1.8
+ARG NUM_BUILDERS=1
 ARG DESTDIR="/build"
 ARG PREFIX="/usr"
 
@@ -56,7 +58,7 @@ RUN \
         -DBUILD_STATIC_LIBS=OFF \
         -DCMAKE_INSTALL_LIBDIR=lib \
     ; \
-    make; make install; make install DESTDIR= ; cd ..; \
+    make -j$NUM_BUILDERS; make install; make install DESTDIR= ; cd ..; \
     rm -rf laszip-src-${LASZIP_VERSION} laszip-src-$LASZIP_VERSION.tar.gz;
 
 RUN \
@@ -64,7 +66,7 @@ RUN \
     tar xjf geos*bz2; \
     cd geos*; \
     ./configure --prefix=$PREFIX CFLAGS="-O2 -Os"; \
-    make; make install; make install DESTDIR= ;\
+    make -j$NUM_BUILDERS; make install; make install DESTDIR= ;\
     cd ..; \
     rm -rf geos*;
 
@@ -82,7 +84,7 @@ RUN \
     cd libgeotiff-$GEOTIFF_VERSION; \
     ./configure \
         --prefix=$PREFIX --with-proj=/build/usr ;\
-    make; make install; make install DESTDIR=; cd ..; \
+    make -j$NUM_BUILDERS; make install; make install DESTDIR=; cd ..; \
     rm -rf libgeotiff-$GEOTIFF_VERSION.tar.gz libgeotiff-$GEOTIFF_VERSION;
 
 # GDAL
@@ -99,11 +101,12 @@ RUN \
         --with-geos=$DESTDIR/usr/bin/geos-config \
         --with-hide-internal-symbols=yes \
         CFLAGS="-O2 -Os" CXXFLAGS="-O2 -Os"; \
-    make ; make install; make install DESTDIR= ; \
+    make -j$NUM_BUILDERS; make install; make install DESTDIR= ; \
     cd $BUILD; rm -rf gdal-$GDAL_VERSION*
 
 RUN \
-    git clone https://github.com/PDAL/PDAL.git; \
+    pip install numpy cython packaging; \
+    git clone https://github.com/PDAL/PDAL.git --branch $PDAL_VERSION --depth 1; \
     cd PDAL; \
     mkdir -p _build; \
     cd _build; \
@@ -119,8 +122,15 @@ RUN \
         -DCMAKE_INSTALL_PREFIX=$PREFIX \
         -DWITH_TESTS=OFF \
         -DCMAKE_INSTALL_LIBDIR=lib \
+        -DBUILD_PLUGIN_PYTHON=ON \
     ; \
-    make ; make install; make install DESTDIR= ;
+    make -j$NUM_BUILDERS; make install; make install DESTDIR= ;
+
+RUN \
+    git clone https://github.com/PDAL/python pdalextension  --branch $PDAL_PYTHON_VERSION --depth 1; \
+    cd pdalextension; \
+    python setup.py build; \
+    python setup.py install;
 
 RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
 RUN ldconfig
