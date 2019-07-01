@@ -106,8 +106,10 @@ RUN \
 
 RUN \
     pip install numpy cython packaging; \
-    git clone https://github.com/PDAL/PDAL.git --branch $PDAL_VERSION --depth 1; \
+    git clone https://github.com/PDAL/PDAL.git; \
+    #--branch $PDAL_VERSION --depth 1; \
     cd PDAL; \
+    git checkout e3d83eba24de60795c4b005c6d183ba6738ebab9; \
     mkdir -p _build; \
     cd _build; \
     cmake .. \
