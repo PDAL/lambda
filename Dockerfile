@@ -104,12 +104,14 @@ RUN \
     make -j$NUM_BUILDERS; make install; make install DESTDIR= ; \
     cd $BUILD; rm -rf gdal-$GDAL_VERSION*
 
+# compile numpy to save space https://stackoverflow.com/q/53274271
 RUN \
-    pip install numpy cython packaging; \
-    git clone https://github.com/PDAL/PDAL.git; \
-    #--branch $PDAL_VERSION --depth 1; \
+    CFLAGS="-g0 -I/var/lang/include:/usr/include -L/var/lang/lib:/usr/lib:/var/local/lib" pip install numpy --compile --no-cache-dir --global-option=build_ext --global-option="-j $NUM_BUILDERS"
+
+RUN \
+    pip install cython packaging; \
+    git clone https://github.com/PDAL/PDAL.git --branch $PDAL_VERSION --depth 1; \
     cd PDAL; \
-    git checkout e3d83eba24de60795c4b005c6d183ba6738ebab9; \
     mkdir -p _build; \
     cd _build; \
     cmake .. \
@@ -125,14 +127,14 @@ RUN \
         -DWITH_TESTS=OFF \
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DBUILD_PLUGIN_PYTHON=ON \
+        -DPDAL_PYTHON_LIBRARY="libpython3.so" \
     ; \
     make -j$NUM_BUILDERS; make install; make install DESTDIR= ;
 
 RUN \
     git clone https://github.com/PDAL/python pdalextension  --branch $PDAL_PYTHON_VERSION --depth 1; \
     cd pdalextension; \
-    python setup.py build; \
-    python setup.py install;
+    pip install . ;
 
 RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
 RUN ldconfig
