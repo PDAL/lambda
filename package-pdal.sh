@@ -6,6 +6,7 @@ PACKAGE_NAME="lambda-deploy.zip"
 
 # make deployment directory and add lambda handler
 cp -r /build/usr/lib $DEPLOY_DIR/lib
+cp -r /build/usr/lib64/*.so* $DEPLOY_DIR/lib
 cp -r /build/usr/bin $DEPLOY_DIR/bin
 cp /usr/lib64/libjpeg.so.62.0.0 $DEPLOY_DIR/lib/
 cp /usr/lib64/libxml2.so.2.9.1 $DEPLOY_DIR/lib/

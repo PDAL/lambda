@@ -2,12 +2,13 @@ FROM lambci/lambda:build-python3.7 as builder
 
 ARG http_proxy
 ARG CURL_VERSION=7.63.0
-ARG GDAL_VERSION=3.0.0
+ARG GDAL_VERSION=3.0.1
 ARG GEOS_VERSION=3.7.2
-ARG PROJ_VERSION=6.0.0
+ARG PROJ_VERSION=6.1.1
 ARG LASZIP_VERSION=3.4.1
 ARG GEOTIFF_VERSION=1.5.1
-ARG PDAL_VERSION=1.9.1
+ARG PDAL_VERSION=master
+ARG ENTWINE_VERSION=2.1.0
 ARG DESTDIR="/build"
 ARG PREFIX="/usr"
 
@@ -38,9 +39,9 @@ RUN gcc --version
 
 
 RUN \
-    wget https://github.com/Kitware/CMake/releases/download/v3.14.3/cmake-3.14.3.tar.gz; \
-    tar -zxvf cmake-3.14.3.tar.gz; \
-    cd cmake-3.14.3; \
+    wget https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1.tar.gz; \
+    tar -zxvf cmake-3.15.1.tar.gz; \
+    cd cmake-3.15.1; \
     ./bootstrap --prefix=/usr ;\
     make ;\
     make install DESTDIR=/
@@ -103,8 +104,39 @@ RUN \
     cd $BUILD; rm -rf gdal-$GDAL_VERSION*
 
 RUN \
+    wget https://github.com/facebook/zstd/releases/download/v1.4.2/zstd-1.4.2.tar.gz \
+    && tar zxvf zstd-1.4.2.tar.gz \
+    && cd zstd-1.4.2/build/cmake \
+    && mkdir -p _build \
+    && cd _build \
+    && cmake .. \
+        -G "Unix Makefiles" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+    && make \
+    && make install \
+    && make install DESTDIR=
+
+RUN \
+    wget http://apache.mirrors.hoobly.com//xerces/c/3/sources/xerces-c-3.2.2.tar.gz \
+    && tar zxvf xerces-c-3.2.2.tar.gz \
+    && cd xerces-c-3.2.2 \
+    && mkdir -p _build \
+    && cd _build \
+    && cmake .. \
+        -G "Unix Makefiles" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+    && make \
+    && make install \
+    && make install DESTDIR=
+
+RUN \
+    yum install -y \
+        openssl-devel ; \
     git clone https://github.com/PDAL/PDAL.git; \
     cd PDAL; \
+    git checkout $PDAL_VERSION; \
     mkdir -p _build; \
     cd _build; \
     cmake .. \
@@ -113,7 +145,9 @@ RUN \
         -DCMAKE_CXX_FLAGS="-std=c++11" \
         -DCMAKE_MAKE_PROGRAM=make \
         -DBUILD_PLUGIN_I3S=ON \
+        -DBUILD_PLUGIN_E57=ON \
         -DWITH_LASZIP=ON \
+        -DWITH_ZSTD=ON \
         -DCMAKE_LIBRARY_PATH:FILEPATH="$DESTDIR/usr/lib" \
         -DCMAKE_INCLUDE_PATH:FILEPATH="$DESTDIR/usr/include" \
         -DCMAKE_INSTALL_PREFIX=$PREFIX \
@@ -122,7 +156,26 @@ RUN \
     ; \
     make ; make install; make install DESTDIR= ;
 
+RUN \
+    yum install -y \
+        xz-devel; \
+    git clone https://github.com/connormanning/entwine.git; \
+    cd entwine; \
+    git checkout $ENTWINE_VERSION; \
+    mkdir -p _build; \
+    cd _build; \
+    cmake -G "Unix Makefiles" \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j4 && \
+    make install DESTDIR= ;
+
+RUN \
+  yum install -y \
+    jq-libs jq-devel jq
+
 RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
+RUN rm /build/usr/lib64/*.la ; rm /build/usr/lib64/*.a
 RUN ldconfig
 ADD package-pdal.sh /
 
