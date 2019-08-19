@@ -19,6 +19,7 @@ RUN \
     automake16 \
     libpng-devel \
     nasm wget tar zlib-devel curl-devel zip libjpeg-devel rsync git ssh bzip2 automake \
+    jq-libs jq-devel jq xz-devel openssl-devel  \
         glib2-devel libtiff-devel pkg-config libcurl-devel;   # required for pkg-config
 
 
@@ -132,8 +133,6 @@ RUN \
     && make install DESTDIR=
 
 RUN \
-    yum install -y \
-        openssl-devel ; \
     git clone https://github.com/PDAL/PDAL.git; \
     cd PDAL; \
     git checkout $PDAL_VERSION; \
@@ -157,8 +156,6 @@ RUN \
     make ; make install; make install DESTDIR= ;
 
 RUN \
-    yum install -y \
-        xz-devel; \
     git clone https://github.com/connormanning/entwine.git; \
     cd entwine; \
     git checkout $ENTWINE_VERSION; \
@@ -170,12 +167,8 @@ RUN \
     make -j4 && \
     make install DESTDIR= ;
 
-RUN \
-  yum install -y \
-    jq-libs jq-devel jq
-
 RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
-RUN rm /build/usr/lib64/*.la ; rm /build/usr/lib64/*.a
+RUN rm /build/usr/lib64/*.a
 RUN ldconfig
 ADD package-pdal.sh /
 
