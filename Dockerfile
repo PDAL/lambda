@@ -11,6 +11,8 @@ ARG PDAL_VERSION=master
 ARG ENTWINE_VERSION=2.1.0
 ARG DESTDIR="/build"
 ARG PREFIX="/usr"
+ARG PARALLEL=2
+
 
 RUN \
   rpm --rebuilddb && \
@@ -19,7 +21,7 @@ RUN \
     automake16 \
     libpng-devel \
     nasm wget tar zlib-devel curl-devel zip libjpeg-devel rsync git ssh bzip2 automake \
-    jq-libs jq-devel jq xz-devel openssl-devel  \
+    jq-libs jq-devel jq xz-devel openssl-devel ninja-build wget \
         glib2-devel libtiff-devel pkg-config libcurl-devel;   # required for pkg-config
 
 
@@ -40,69 +42,92 @@ RUN gcc --version
 
 
 RUN \
-    wget https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1.tar.gz; \
-    tar -zxvf cmake-3.15.1.tar.gz; \
-    cd cmake-3.15.1; \
-    ./bootstrap --prefix=/usr ;\
-    make ;\
-    make install DESTDIR=/
+    wget https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1.tar.gz \
+    && tar -zxvf cmake-3.15.1.tar.gz \
+    && cd cmake-3.15.1 \
+    && ./bootstrap --parallel=${PARALLEL} --prefix=/usr \
+    && make -j ${PARALLEL} \
+    && make install DESTDIR=/ \
+    && cd / \
+    && rm -rf cmake*
 
 
-RUN \
-    wget https://github.com/LASzip/LASzip/releases/download/$LASZIP_VERSION/laszip-src-$LASZIP_VERSION.tar.gz; \
-    tar -xzvf laszip-src-$LASZIP_VERSION.tar.gz; \
-    cd laszip-src-$LASZIP_VERSION;\
-    cmake -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=$PREFIX \
-        -DBUILD_SHARED_LIBS=ON \
-        -DBUILD_STATIC_LIBS=OFF \
-        -DCMAKE_INSTALL_LIBDIR=lib \
-    ; \
-    make; make install; make install DESTDIR= ; cd ..; \
-    rm -rf laszip-src-${LASZIP_VERSION} laszip-src-$LASZIP_VERSION.tar.gz;
+RUN git clone https://github.com/LASzip/LASzip.git laszip \
+    && cd laszip \
+    && git checkout ${LASZIP_VERSION} \
+    && cmake  \
+        -G Ninja \
+        -DCMAKE_INSTALL_PREFIX=/usr/ \
+        -DCMAKE_BUILD_TYPE="Release" \
+     .  \
+    && ninja -j ${PARALLEL} \
+    && ninja install \
+    && DESTDIR=/ ninja install \
+    && cd / \
+    && rm -rf laszip*
 
-RUN \
-    wget http://download.osgeo.org/geos/geos-$GEOS_VERSION.tar.bz2; \
-    tar xjf geos*bz2; \
-    cd geos*; \
-    ./configure --prefix=$PREFIX CFLAGS="-O2 -Os"; \
-    make; make install; make install DESTDIR= ;\
-    cd ..; \
-    rm -rf geos*;
+
 
 RUN \
-    wget http://download.osgeo.org/proj/proj-$PROJ_VERSION.tar.gz; \
-    tar -zvxf proj-$PROJ_VERSION.tar.gz; \
-    cd proj-$PROJ_VERSION; \
-    ./configure --prefix=$PREFIX; \
-    make; make install; make install DESTDIR=; cd ..; \
-    rm -rf proj-$PROJ_VERSION proj-$PROJ_VERSION.tar.gz
+    wget http://download.osgeo.org/geos/geos-$GEOS_VERSION.tar.bz2 && \
+    tar xjf geos*bz2 && \
+    cd geos*  \
+    && cmake  \
+        -G Ninja \
+        -DCMAKE_INSTALL_PREFIX=/usr/ \
+        -DCMAKE_BUILD_TYPE="Release" \
+     .  \
+    && ninja -j ${PARALLEL} \
+    && ninja install \
+    && DESTDIR=/ ninja install \
+    && cd / \
+    && rm -rf geos*
 
-RUN \
-    wget https://github.com/OSGeo/libgeotiff/releases/download/$GEOTIFF_VERSION/libgeotiff-$GEOTIFF_VERSION.tar.gz; \
-    tar -xzvf libgeotiff-$GEOTIFF_VERSION.tar.gz; \
-    cd libgeotiff-$GEOTIFF_VERSION; \
-    ./configure \
-        --prefix=$PREFIX --with-proj=/build/usr ;\
-    make; make install; make install DESTDIR=; cd ..; \
-    rm -rf libgeotiff-$GEOTIFF_VERSION.tar.gz libgeotiff-$GEOTIFF_VERSION;
+RUN git clone https://github.com/OSGeo/PROJ.git --branch ${PROJ_VERSION} proj \
+    && cd proj \
+    && ./autogen.sh \
+    && ./configure --prefix=/usr \
+    && make -j ${PARALLEL} \
+    && make install \
+    && DESTDIR=/ make install \
+    && cd / \
+    && rm -rf /proj*
 
-# GDAL
-RUN \
-    wget http://download.osgeo.org/gdal/$GDAL_VERSION/gdal-$GDAL_VERSION.tar.gz; \
-    tar -xzvf gdal-$GDAL_VERSION.tar.gz; \
-    cd gdal-$GDAL_VERSION; \
-    ./configure \
-        --prefix=$PREFIX \
-        --with-geotiff=$DESTDIR/usr \
-        --with-tiff=/usr \
-        --with-curl=yes \
-        --without-python \
-        --with-geos=$DESTDIR/usr/bin/geos-config \
-        --with-hide-internal-symbols=yes \
-        CFLAGS="-O2 -Os" CXXFLAGS="-O2 -Os"; \
-    make ; make install; make install DESTDIR= ; \
-    cd $BUILD; rm -rf gdal-$GDAL_VERSION*
+RUN git clone --branch master https://github.com/OSGeo/libgeotiff.git --branch ${GEOTIFF_VERSION} \
+    && cd libgeotiff/libgeotiff \
+    && ./autogen.sh \
+    && ./configure --prefix=/usr --with-proj=/usr \
+    && make -j ${PARALLEL} \
+    && make install \
+    && DESTDIR=/ make install \
+    && cd / \
+    && rm -rf /libgeotiff*
+
+
+RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GDAL_VERSION} \
+    &&    cd gdal/gdal \
+    && ./configure --prefix=/usr \
+            --mandir=/usr/share/man \
+            --includedir=/usr/include/gdal \
+            --with-threads \
+            --with-grass=no \
+            --with-hide-internal-symbols=yes \
+            --with-rename-internal-libtiff-symbols=yes \
+            --with-rename-internal-libgeotiff-symbols=yes \
+            --with-libtiff=/usr/ \
+            --with-geos=/usr/bin/geos-config \
+            --with-geotiff=/usr \
+            --with-proj=/usr \
+            --with-ogdi=no \
+            --with-curl \
+            --with-ecw=no \
+            --with-mrsid=no \
+    && make -j ${PARALLEL} \
+    && make install \
+    && DESTDIR=/ make install \
+    && cd / \
+    && rm -rf /gdal*
+
 
 RUN \
     wget https://github.com/facebook/zstd/releases/download/v1.4.2/zstd-1.4.2.tar.gz \
@@ -110,13 +135,16 @@ RUN \
     && cd zstd-1.4.2/build/cmake \
     && mkdir -p _build \
     && cd _build \
-    && cmake .. \
-        -G "Unix Makefiles" \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=/usr \
-    && make \
-    && make install \
-    && make install DESTDIR=
+    && cmake  \
+        -G Ninja \
+        -DCMAKE_INSTALL_PREFIX=/usr/ \
+        -DCMAKE_BUILD_TYPE="Release" \
+     ..  \
+    && ninja -j ${PARALLEL} \
+    && ninja install \
+    && DESTDIR=/ ninja install \
+    && cd / \
+    && rm -rf zstd*
 
 RUN \
     wget http://apache.mirrors.hoobly.com//xerces/c/3/sources/xerces-c-3.2.2.tar.gz \
@@ -125,20 +153,22 @@ RUN \
     && mkdir -p _build \
     && cd _build \
     && cmake .. \
-        -G "Unix Makefiles" \
+        -G "Ninja" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=/usr \
-    && make \
-    && make install \
-    && make install DESTDIR=
+    && ninja -j ${PARALLEL} \
+    && ninja install \
+    && DESTDIR= ninja install \
+    && cd / \
+    && rm -rf xerces*
 
 RUN \
-    git clone https://github.com/PDAL/PDAL.git; \
-    cd PDAL; \
-    git checkout $PDAL_VERSION; \
-    mkdir -p _build; \
-    cd _build; \
-    cmake .. \
+    git clone https://github.com/PDAL/PDAL.git --branch ${PDAL_VERSION} \
+    && cd PDAL \
+    && git checkout $PDAL_VERSION \
+    && mkdir -p _build \
+    && cd _build \
+    && cmake .. \
         -G "Unix Makefiles" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_CXX_FLAGS="-std=c++11" \
@@ -152,23 +182,81 @@ RUN \
         -DCMAKE_INSTALL_PREFIX=$PREFIX \
         -DWITH_TESTS=OFF \
         -DCMAKE_INSTALL_LIBDIR=lib \
-    ; \
-    make ; make install; make install DESTDIR= ;
+    && make  -j ${PARALLEL} \
+    && make  install \
+    && make install DESTDIR=/ \
+    && cd / \
+    && rm -rf pdal*
 
 RUN \
-    git clone https://github.com/connormanning/entwine.git; \
-    cd entwine; \
-    git checkout $ENTWINE_VERSION; \
-    mkdir -p _build; \
-    cd _build; \
-    cmake -G "Unix Makefiles" \
+    git clone https://github.com/connormanning/entwine.git --branch ${ENTWINE_VERSION} \
+    && cd entwine \
+    && mkdir -p _build \
+    && cd _build \
+    && cmake -G "Ninja" \
         -DCMAKE_INSTALL_PREFIX=/usr \
-        -DCMAKE_BUILD_TYPE=Release .. && \
-    make -j4 && \
-    make install DESTDIR= ;
+        -DCMAKE_BUILD_TYPE=Release .. \
+    && ninja -j ${PARALLEL} \
+    && ninja install \
+    && DESTDIR=/ ninja install \
+    && cd / \
+    && rm -rf entwine*
 
 RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
 RUN rm /build/usr/lib64/*.a
 RUN ldconfig
 ADD package-pdal.sh /
+
+
+#            --disable-driver-airsar \
+#            --disable-driver-arg  \
+#            --disable-driver-blx  \
+#            --disable-driver-bsb \
+#            --disable-driver-cals \
+#            --disable-driver-ceos \
+#            --disable-driver-ceos2 \
+#            --disable-driver-coasp \
+#            --disable-driver-cosar \
+#            --disable-driver-ctg \
+#            --disable-driver-dimap \
+#            --disable-driver-elas \
+#            --disable-driver-ingr \
+#            --disable-driver-jdem \
+#            --disable-driver-r \
+#            --disable-driver-pds \
+#            --disable-driver-prf \
+#            --disable-driver-rmf \
+#            --disable-driver-safe \
+#            --disable-driver-saga \
+#            --disable-driver-sigdem \
+#            --disable-driver-sgi \
+#            --disable-driver-zmap \
+#            --disable-driver-cad \
+#            --disable-driver-dgn \
+#            --disable-driver-edigeo \
+#            --disable-driver-geoconcept \
+#            --disable-driver-georss \
+#            --disable-driver-gtm \
+#            --disable-driver-htf \
+#            --disable-driver-jml \
+#            --disable-driver-openair \
+#            --disable-driver-rec \
+#            --disable-driver-segukooa \
+#            --disable-driver-segy \
+#            --disable-driver-selafin \
+#            --disable-driver-xplane \
+#            --disable-driver-eeda \
+#            --disable-driver-plmosaic \
+#            --disable-driver-rda \
+#            --disable-driver-vdv \
+#            --disable-driver-sxf \
+#            --disable-driver-sua \
+#            --disable-driver-amigocloud \
+#            --disable-driver-daas  \
+#            --disable-driver-elastic  \
+#            --disable-driver-gft  \
+#            --disable-driver-ngw  \
+#            --disable-driver-plscenes  \
+#            --disable-driver-rasterlite  \
+#            --disable-driver-vfk  \
 
