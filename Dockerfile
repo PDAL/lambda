@@ -11,7 +11,8 @@ ARG PDAL_VERSION=master
 ARG ENTWINE_VERSION=2.1.0
 ARG DESTDIR="/build"
 ARG PREFIX="/usr"
-ARG PARALLEL=2
+ARG PARALLEL=72
+ARG CMAKE_VERSION=3.16.1
 
 
 RUN \
@@ -42,9 +43,9 @@ RUN gcc --version
 
 
 RUN \
-    wget https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1.tar.gz \
-    && tar -zxvf cmake-3.15.1.tar.gz \
-    && cd cmake-3.15.1 \
+    wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz \
+    && tar -zxvf cmake-${CMAKE_VERSION}.tar.gz \
+    && cd cmake-${CMAKE_VERSION} \
     && ./bootstrap --parallel=${PARALLEL} --prefix=/usr \
     && make -j ${PARALLEL} \
     && make install DESTDIR=/ \
@@ -162,6 +163,9 @@ RUN \
     && cd / \
     && rm -rf xerces*
 
+ADD https://api.github.com/repos/PDAL/PDAL/commits?sha=${PDAL_VERSION} \
+    /tmp/bust-cache
+
 RUN \
     git clone https://github.com/PDAL/PDAL.git --branch ${PDAL_VERSION} \
     && cd PDAL \
@@ -206,57 +210,4 @@ RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
 RUN rm /build/usr/lib64/*.a
 RUN ldconfig
 ADD package-pdal.sh /
-
-
-#            --disable-driver-airsar \
-#            --disable-driver-arg  \
-#            --disable-driver-blx  \
-#            --disable-driver-bsb \
-#            --disable-driver-cals \
-#            --disable-driver-ceos \
-#            --disable-driver-ceos2 \
-#            --disable-driver-coasp \
-#            --disable-driver-cosar \
-#            --disable-driver-ctg \
-#            --disable-driver-dimap \
-#            --disable-driver-elas \
-#            --disable-driver-ingr \
-#            --disable-driver-jdem \
-#            --disable-driver-r \
-#            --disable-driver-pds \
-#            --disable-driver-prf \
-#            --disable-driver-rmf \
-#            --disable-driver-safe \
-#            --disable-driver-saga \
-#            --disable-driver-sigdem \
-#            --disable-driver-sgi \
-#            --disable-driver-zmap \
-#            --disable-driver-cad \
-#            --disable-driver-dgn \
-#            --disable-driver-edigeo \
-#            --disable-driver-geoconcept \
-#            --disable-driver-georss \
-#            --disable-driver-gtm \
-#            --disable-driver-htf \
-#            --disable-driver-jml \
-#            --disable-driver-openair \
-#            --disable-driver-rec \
-#            --disable-driver-segukooa \
-#            --disable-driver-segy \
-#            --disable-driver-selafin \
-#            --disable-driver-xplane \
-#            --disable-driver-eeda \
-#            --disable-driver-plmosaic \
-#            --disable-driver-rda \
-#            --disable-driver-vdv \
-#            --disable-driver-sxf \
-#            --disable-driver-sua \
-#            --disable-driver-amigocloud \
-#            --disable-driver-daas  \
-#            --disable-driver-elastic  \
-#            --disable-driver-gft  \
-#            --disable-driver-ngw  \
-#            --disable-driver-plscenes  \
-#            --disable-driver-rasterlite  \
-#            --disable-driver-vfk  \
 
