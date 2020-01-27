@@ -2,7 +2,7 @@
 LAYERNAME="pdal"
 LAYER=$(aws lambda publish-layer-version \
     --layer-name $LAYERNAME \
-    --description "PDAL 1.9.1 softare" \
+    --description "PDAL 2.0.1 softare" \
     --zip-file fileb://./lambda-deploy.zip \
     --compatible-runtimes "provided" \
     --license-info BSD \

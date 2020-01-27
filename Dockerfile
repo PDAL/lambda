@@ -1,18 +1,18 @@
 FROM lambci/lambda:build-python3.7 as builder
 
 ARG http_proxy
-ARG CURL_VERSION=7.63.0
-ARG GDAL_VERSION=3.0.1
-ARG GEOS_VERSION=3.7.2
-ARG PROJ_VERSION=6.1.1
-ARG LASZIP_VERSION=3.4.1
+ARG CURL_VERSION=7.68.0
+ARG GDAL_VERSION=3.0.3
+ARG GEOS_VERSION=master
+ARG PROJ_VERSION=master
+ARG LASZIP_VERSION=3.4.3
 ARG GEOTIFF_VERSION=1.5.1
 ARG PDAL_VERSION=master
-ARG ENTWINE_VERSION=2.1.0
+ARG ENTWINE_VERSION=master
 ARG DESTDIR="/build"
 ARG PREFIX="/usr"
-ARG PARALLEL=72
-ARG CMAKE_VERSION=3.16.1
+ARG PARALLEL=4
+ARG CMAKE_VERSION=3.16.2
 
 
 RUN \
@@ -49,7 +49,7 @@ RUN \
     && ./bootstrap --parallel=${PARALLEL} --prefix=/usr \
     && make -j ${PARALLEL} \
     && make install DESTDIR=/ \
-    && cd / \
+    && cd /var/task \
     && rm -rf cmake*
 
 
@@ -64,15 +64,14 @@ RUN git clone https://github.com/LASzip/LASzip.git laszip \
     && ninja -j ${PARALLEL} \
     && ninja install \
     && DESTDIR=/ ninja install \
-    && cd / \
+    && cd /var/task \
     && rm -rf laszip*
 
 
 
 RUN \
-    wget http://download.osgeo.org/geos/geos-$GEOS_VERSION.tar.bz2 && \
-    tar xjf geos*bz2 && \
-    cd geos*  \
+    git clone https://github.com/libgeos/geos.git geos \
+    && cd geos*  \
     && cmake  \
         -G Ninja \
         -DCMAKE_INSTALL_PREFIX=/usr/ \
@@ -81,18 +80,30 @@ RUN \
     && ninja -j ${PARALLEL} \
     && ninja install \
     && DESTDIR=/ ninja install \
-    && cd / \
+    && cd /var/task \
     && rm -rf geos*
 
-RUN git clone https://github.com/OSGeo/PROJ.git --branch ${PROJ_VERSION} proj \
-    && cd proj \
-    && ./autogen.sh \
+ARG SQLITE_VERSION="sqlite-autoconf-3300100"
+RUN wget https://www.sqlite.org/2019/${SQLITE_VERSION}.tar.gz \
+    && tar zxvf ${SQLITE_VERSION}.tar.gz \
+    && cd ${SQLITE_VERSION} \
     && ./configure --prefix=/usr \
     && make -j ${PARALLEL} \
     && make install \
     && DESTDIR=/ make install \
-    && cd / \
-    && rm -rf /proj*
+    && cd /var/task \
+    && rm -rf sqlite*
+
+RUN git clone https://github.com/OSGeo/PROJ.git --branch ${PROJ_VERSION} proj \
+#RUN git clone https://github.com/rouault/PROJ.git --branch rfc4_code_review proj\
+    && cd proj \
+    && ./autogen.sh \
+    && SQLITE3_CFLAGS="-I/usr/include" SQLITE3_LIBS="-L/usr/lib -lsqlite3" ./configure --prefix=/usr \
+    && make -j ${PARALLEL} \
+    && make install \
+    && DESTDIR=/ make install \
+    && cd /var/task \
+    && rm -rf proj*
 
 RUN git clone --branch master https://github.com/OSGeo/libgeotiff.git --branch ${GEOTIFF_VERSION} \
     && cd libgeotiff/libgeotiff \
@@ -101,12 +112,12 @@ RUN git clone --branch master https://github.com/OSGeo/libgeotiff.git --branch $
     && make -j ${PARALLEL} \
     && make install \
     && DESTDIR=/ make install \
-    && cd / \
-    && rm -rf /libgeotiff*
+    && cd /var/task \
+    && rm -rf libgeotiff*
 
 
 RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GDAL_VERSION} \
-    &&    cd gdal/gdal \
+    && cd gdal/gdal \
     && ./configure --prefix=/usr \
             --mandir=/usr/share/man \
             --includedir=/usr/include/gdal \
@@ -126,8 +137,8 @@ RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GD
     && make -j ${PARALLEL} \
     && make install \
     && DESTDIR=/ make install \
-    && cd / \
-    && rm -rf /gdal*
+    && cd /var/task \
+    && rm -rf gdal*
 
 
 RUN \
@@ -144,7 +155,7 @@ RUN \
     && ninja -j ${PARALLEL} \
     && ninja install \
     && DESTDIR=/ ninja install \
-    && cd / \
+    && cd /var/task \
     && rm -rf zstd*
 
 RUN \
@@ -160,11 +171,14 @@ RUN \
     && ninja -j ${PARALLEL} \
     && ninja install \
     && DESTDIR= ninja install \
-    && cd / \
+    && cd /var/task \
     && rm -rf xerces*
 
 ADD https://api.github.com/repos/PDAL/PDAL/commits?sha=${PDAL_VERSION} \
     /tmp/bust-cache
+
+ENV \
+    PACKAGE_PREFIX=${DESTDIR}/python
 
 RUN \
     git clone https://github.com/PDAL/PDAL.git --branch ${PDAL_VERSION} \
@@ -189,8 +203,17 @@ RUN \
     && make  -j ${PARALLEL} \
     && make  install \
     && make install DESTDIR=/ \
-    && cd / \
+    && DESTDIR=/ make install  \
+    && cd /var/task \
     && rm -rf pdal*
+
+#RUN \
+#    git clone https://github.com/PDAL/python.git pdal-python \
+#    && cd pdal-python \
+#    && pip install numpy Cython packaging \
+#    && ls /usr/bin/pd* \
+#    && PDAL_CONFIG=/usr/bin/pdal-config pip install . --no-binary numpy -t $PACKAGE_PREFIX \
+#    && ls $PACKAGE_PREFIX
 
 RUN \
     git clone https://github.com/connormanning/entwine.git --branch ${ENTWINE_VERSION} \
@@ -203,7 +226,7 @@ RUN \
     && ninja -j ${PARALLEL} \
     && ninja install \
     && DESTDIR=/ ninja install \
-    && cd / \
+    && cd /var/task \
     && rm -rf entwine*
 
 RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
