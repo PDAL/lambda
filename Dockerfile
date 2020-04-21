@@ -2,17 +2,17 @@ FROM lambci/lambda:build-python3.7 as builder
 
 ARG http_proxy
 ARG CURL_VERSION=7.68.0
-ARG GDAL_VERSION=3.0.3
-ARG GEOS_VERSION=master
-ARG PROJ_VERSION=master
+ARG GDAL_VERSION=3.0.4
+ARG GEOS_VERSION=3.8.1
+ARG PROJ_VERSION=7.0.0
 ARG LASZIP_VERSION=3.4.3
 ARG GEOTIFF_VERSION=1.5.1
-ARG PDAL_VERSION=master
-ARG ENTWINE_VERSION=master
+ARG PDAL_VERSION=2.1.0
+ARG ENTWINE_VERSION=2.1.0
 ARG DESTDIR="/build"
 ARG PREFIX="/usr"
 ARG PARALLEL=4
-ARG CMAKE_VERSION=3.16.2
+ARG CMAKE_VERSION=3.17.1
 
 
 RUN \
@@ -94,7 +94,7 @@ RUN wget https://www.sqlite.org/2019/${SQLITE_VERSION}.tar.gz \
     && cd /var/task \
     && rm -rf sqlite*
 
-RUN git clone https://github.com/OSGeo/PROJ.git --branch ${PROJ_VERSION} proj \
+RUN git clone https://github.com/OSGeo/PROJ.git --branch ${PROJ_VERSION} proj  \
 #RUN git clone https://github.com/rouault/PROJ.git --branch rfc4_code_review proj\
     && cd proj \
     && ./autogen.sh \
@@ -142,9 +142,9 @@ RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GD
 
 
 RUN \
-    wget https://github.com/facebook/zstd/releases/download/v1.4.2/zstd-1.4.2.tar.gz \
-    && tar zxvf zstd-1.4.2.tar.gz \
-    && cd zstd-1.4.2/build/cmake \
+    wget https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz \
+    && tar zxvf zstd-1.4.4.tar.gz \
+    && cd zstd-1.4.4/build/cmake \
     && mkdir -p _build \
     && cd _build \
     && cmake  \
@@ -159,9 +159,9 @@ RUN \
     && rm -rf zstd*
 
 RUN \
-    wget http://apache.mirrors.hoobly.com//xerces/c/3/sources/xerces-c-3.2.2.tar.gz \
-    && tar zxvf xerces-c-3.2.2.tar.gz \
-    && cd xerces-c-3.2.2 \
+    wget http://apache.mirrors.hoobly.com//xerces/c/3/sources/xerces-c-3.2.3.tar.gz \
+    && tar zxvf xerces-c-3.2.3.tar.gz \
+    && cd xerces-c-3.2.3 \
     && mkdir -p _build \
     && cd _build \
     && cmake .. \

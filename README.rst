@@ -44,8 +44,8 @@ Instructions
    ::
 
       $ ./create-lambda-layer.sh
-      Published version 27 for Lambda layer pdal
-      Setting execution access to public for version 27 for Lambda layer pdal
+      Published version 30 for Lambda layer pdal
+      Setting execution access to public for version 30 for Lambda layer pdal
       Layer pdal is available at 'arn:aws:lambda:us-east-1:163178234892:layer:pdal'
 
 .. _`Lambda Layers`: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
