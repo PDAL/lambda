@@ -115,6 +115,23 @@ RUN git clone --branch master https://github.com/OSGeo/libgeotiff.git --branch $
     && cd /var/task \
     && rm -rf libgeotiff*
 
+RUN \
+    wget https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz \
+    && tar zxvf zstd-1.4.4.tar.gz \
+    && cd zstd-1.4.4/build/cmake \
+    && mkdir -p _build \
+    && cd _build \
+    && cmake  \
+        -G Ninja \
+        -DCMAKE_INSTALL_PREFIX=/usr/ \
+        -DCMAKE_BUILD_TYPE="Release" \
+     ..  \
+    && ninja -j ${PARALLEL} \
+    && ninja install \
+    && DESTDIR=/ ninja install \
+    && cd /var/task \
+    && rm -rf zstd*
+
 
 RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GDAL_VERSION} \
     && cd gdal/gdal \
@@ -140,23 +157,6 @@ RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GD
     && cd /var/task \
     && rm -rf gdal*
 
-
-RUN \
-    wget https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz \
-    && tar zxvf zstd-1.4.4.tar.gz \
-    && cd zstd-1.4.4/build/cmake \
-    && mkdir -p _build \
-    && cd _build \
-    && cmake  \
-        -G Ninja \
-        -DCMAKE_INSTALL_PREFIX=/usr/ \
-        -DCMAKE_BUILD_TYPE="Release" \
-     ..  \
-    && ninja -j ${PARALLEL} \
-    && ninja install \
-    && DESTDIR=/ ninja install \
-    && cd /var/task \
-    && rm -rf zstd*
 
 RUN \
     wget http://apache.mirrors.hoobly.com//xerces/c/3/sources/xerces-c-3.2.3.tar.gz \
