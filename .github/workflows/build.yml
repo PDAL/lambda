@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
-    container: osgeo/proj-docs
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v2
