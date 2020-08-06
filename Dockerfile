@@ -137,6 +137,7 @@ RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GD
             --mandir=/usr/share/man \
             --includedir=/usr/include/gdal \
             --with-threads \
+            --without-libtool \
             --with-grass=no \
             --with-hide-internal-symbols=yes \
             --with-rename-internal-libtiff-symbols=yes \
