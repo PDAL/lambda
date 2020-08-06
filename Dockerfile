@@ -206,10 +206,11 @@ RUN \
 #RUN \
 #    git clone https://github.com/PDAL/python.git pdal-python \
 #    && cd pdal-python \
-#    && pip install numpy Cython packaging \
-#    && ls /usr/bin/pd* \
-#    && PDAL_CONFIG=/usr/bin/pdal-config pip install . --no-binary numpy -t $PACKAGE_PREFIX \
-#    && ls $PACKAGE_PREFIX
+#    && python -m pip install --upgrade pip \
+#    && pip install numpy scikit-build packaging ninja cmake cython \
+#    && bash -c 'python setup.py build' \
+#    && bash -c 'python setup.py bdist_wheel' \
+#    && ls dist
 
 RUN \
     git clone https://github.com/connormanning/entwine.git --branch ${ENTWINE_VERSION} \
