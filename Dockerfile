@@ -1,10 +1,10 @@
 FROM lambci/lambda:build-python3.7 as builder
 
 ARG http_proxy
-ARG CURL_VERSION=7.70.0
-ARG GDAL_VERSION=3.1.0
+ARG CURL_VERSION=7.70.1
+ARG GDAL_VERSION=3.1.2
 ARG GEOS_VERSION=3.8.1
-ARG PROJ_VERSION=7.0.1
+ARG PROJ_VERSION=7.1.0
 ARG LASZIP_VERSION=3.4.3
 ARG GEOTIFF_VERSION=1.6.0
 ARG PDAL_VERSION=2.1.0
@@ -12,7 +12,8 @@ ARG ENTWINE_VERSION=2.1.0
 ARG DESTDIR="/build"
 ARG PREFIX="/usr"
 ARG PARALLEL=8
-ARG CMAKE_VERSION=3.17.2
+ARG CMAKE_VERSION=3.18.1
+
 
 
 RUN \
@@ -43,12 +44,9 @@ RUN gcc --version
 
 
 RUN \
-    wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz \
-    && tar -zxvf cmake-${CMAKE_VERSION}.tar.gz \
-    && cd cmake-${CMAKE_VERSION} \
-    && ./bootstrap --parallel=${PARALLEL} --prefix=/usr \
-    && make -j ${PARALLEL} \
-    && make install DESTDIR=/ \
+    wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.sh \
+    && chmod +x cmake-${CMAKE_VERSION}-Linux-x86_64.sh \
+    && ./cmake-${CMAKE_VERSION}-Linux-x86_64.sh  --skip-license --prefix=/usr \
     && cd /var/task \
     && rm -rf cmake*
 
@@ -139,6 +137,7 @@ RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GD
             --mandir=/usr/share/man \
             --includedir=/usr/include/gdal \
             --with-threads \
+            --without-libtool \
             --with-grass=no \
             --with-hide-internal-symbols=yes \
             --with-rename-internal-libtiff-symbols=yes \
@@ -177,8 +176,6 @@ RUN \
 ADD https://api.github.com/repos/PDAL/PDAL/commits?sha=${PDAL_VERSION} \
     /tmp/bust-cache
 
-ENV \
-    PACKAGE_PREFIX=${DESTDIR}/python
 
 RUN \
     git clone https://github.com/PDAL/PDAL.git --branch ${PDAL_VERSION} \
@@ -188,8 +185,8 @@ RUN \
     && cd _build \
     && cmake .. \
         -G "Unix Makefiles" \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_FLAGS="-std=c++11" \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_CXX_FLAGS="-std=c++11 -pg" \
         -DCMAKE_MAKE_PROGRAM=make \
         -DBUILD_PLUGIN_I3S=ON \
         -DBUILD_PLUGIN_E57=ON \
@@ -210,10 +207,11 @@ RUN \
 #RUN \
 #    git clone https://github.com/PDAL/python.git pdal-python \
 #    && cd pdal-python \
-#    && pip install numpy Cython packaging \
-#    && ls /usr/bin/pd* \
-#    && PDAL_CONFIG=/usr/bin/pdal-config pip install . --no-binary numpy -t $PACKAGE_PREFIX \
-#    && ls $PACKAGE_PREFIX
+#    && python -m pip install --upgrade pip \
+#    && pip install numpy scikit-build packaging ninja cmake cython \
+#    && bash -c 'python setup.py build' \
+#    && bash -c 'python setup.py bdist_wheel' \
+#    && ls dist
 
 RUN \
     git clone https://github.com/connormanning/entwine.git --branch ${ENTWINE_VERSION} \

@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+    - '*'
+  push:
+    branches:
+    - '*'
+  release:
+    types:
+      - published
+jobs:
+  docker:
+    name: Docker
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+    timeout-minutes: 240
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: pdal/lambda
+          tag_with_ref: true
+          tag_with_sha: true
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+
+          #          if: ${{ startsWith(github.ref, 'refs/tags/') }}
+
+
+  layer:
+    name: Layer
+    needs: [docker]
+    container: pdal/lambda
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Package
+        shell: bash -l {0}
+        run: |
+          /package-pdal.sh
