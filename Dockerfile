@@ -2,7 +2,7 @@ FROM lambci/lambda:build-python3.7 as builder
 
 ARG http_proxy
 ARG CURL_VERSION=7.70.1
-ARG GDAL_VERSION=3.1.3
+ARG GDAL_VERSION=3.1.4
 ARG GEOS_VERSION=3.8.1
 ARG PROJ_VERSION=7.1.1
 ARG LASZIP_VERSION=3.4.3
@@ -114,9 +114,9 @@ RUN git clone --branch master https://github.com/OSGeo/libgeotiff.git --branch $
     && rm -rf libgeotiff*
 
 RUN \
-    wget https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-1.4.4.tar.gz \
-    && tar zxvf zstd-1.4.4.tar.gz \
-    && cd zstd-1.4.4/build/cmake \
+    wget https://github.com/facebook/zstd/releases/download/v1.4.5/zstd-1.4.5.tar.gz \
+    && tar zxvf zstd-1.4.5.tar.gz \
+    && cd zstd-1.4.5/build/cmake \
     && mkdir -p _build \
     && cd _build \
     && cmake  \
