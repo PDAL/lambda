@@ -1,37 +1,48 @@
+#!/bin/bash
 
-LAYERNAME="pdal"
-LAYER=$(aws lambda publish-layer-version \
-    --layer-name $LAYERNAME \
-    --description "PDAL 2.0.1 softare" \
-    --zip-file fileb://./lambda-deploy.zip \
-    --compatible-runtimes "provided" \
-    --license-info BSD \
-    --region $AWS_REGION \
-    --profile $AWS_PROFILE)
+#LAYERNAME="pdal"
 
+create_layer()
+{
+    LAYERNAME="$1"
+    ZIPFILE="$2"
+    DESCRIPTION="$3"
 
-VERSION=$(aws lambda list-layers --region $AWS_REGION |jq '.Layers[]| select(.LayerName=="'$LAYERNAME'").LatestMatchingVersion.Version' -r)
-
-echo "Published version $VERSION for Lambda layer $LAYERNAME"
-
-LAYER=$(aws lambda get-layer-version \
-    --layer-name pdal \
-    --version-number $VERSION \
-    --region $AWS_REGION \
-    --profile $AWS_PROFILE)
+    LAYER=$(aws lambda publish-layer-version \
+        --layer-name $LAYERNAME \
+        --description "$DESCRIPTION" \
+        --zip-file fileb://./$ZIPFILE\
+        --compatible-runtimes "provided" \
+        --license-info BSD \
+        --region $AWS_REGION \
+        --profile $AWS_PROFILE)
 
 
-echo "Setting execution access to public for version $VERSION for Lambda layer $LAYERNAME"
-PERMISSION=$(aws lambda add-layer-version-permission \
-    --layer-name pdal \
-    --version-number $VERSION \
-    --statement-id "run-pdal-publicly" \
-    --principal '*' \
-    --action lambda:GetLayerVersion \
-    --region $AWS_REGION \
-    --profile $AWS_PROFILE )
+    VERSION=$(aws lambda list-layers --region $AWS_REGION |jq '.Layers[]| select(.LayerName=="'$LAYERNAME'").LatestMatchingVersion.Version' -r)
 
-LAYERARN=$(echo $LAYER | jq -r .LayerArn)
+    echo "Published version $VERSION for Lambda layer $LAYERNAME"
 
-echo "Layer $LAYERNAME is available at '$LAYERARN'"
+    LAYER=$(aws lambda get-layer-version \
+        --layer-name $LAYERNAME \
+        --version-number $VERSION \
+        --region $AWS_REGION \
+        --profile $AWS_PROFILE)
 
+
+    echo "Setting execution access to public for version $VERSION for Lambda layer $LAYERNAME"
+    PERMISSION=$(aws lambda add-layer-version-permission \
+        --layer-name $LAYERNAME \
+        --version-number $VERSION \
+        --statement-id "run-pdal-publicly" \
+        --principal '*' \
+        --action lambda:GetLayerVersion \
+        --region $AWS_REGION \
+        --profile $AWS_PROFILE )
+
+    LAYERARN=$(echo $LAYER | jq -r .LayerArn)
+
+    echo "Layer $LAYERNAME is available at '$LAYERARN'"
+
+}
+create_layer "pdal" "pdal-lambda-deploy.zip" "PDAL 2.2.0 software"
+create_layer "pdal-python" "sk-lambda-deploy.zip" "PDAL Python 2.3.5 software"

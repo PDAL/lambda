@@ -173,9 +173,6 @@ RUN \
     && cd /var/task \
     && rm -rf xerces*
 
-ADD https://api.github.com/repos/PDAL/PDAL/commits?sha=${PDAL_VERSION} \
-    /tmp/bust-cache
-
 
 RUN \
     git clone https://github.com/PDAL/PDAL.git --branch ${PDAL_VERSION} \
@@ -194,7 +191,7 @@ RUN \
         -DWITH_ZSTD=ON \
         -DCMAKE_LIBRARY_PATH:FILEPATH="$DESTDIR/usr/lib" \
         -DCMAKE_INCLUDE_PATH:FILEPATH="$DESTDIR/usr/include" \
-        -DCMAKE_INSTALL_PREFIX=$PREFIX \
+        -DCMAKE_INSTALL_PREFIX=/usr \
         -DWITH_TESTS=OFF \
         -DCMAKE_INSTALL_LIBDIR=lib \
     && make  -j ${PARALLEL} \
@@ -202,7 +199,7 @@ RUN \
     && make install DESTDIR=/ \
     && DESTDIR=/ make install  \
     && cd /var/task \
-    && rm -rf pdal*
+    && rm -rf PDAL*
 
 #RUN \
 #    git clone https://github.com/PDAL/python.git pdal-python \
@@ -226,6 +223,12 @@ RUN \
     && DESTDIR=/ ninja install \
     && cd /var/task \
     && rm -rf entwine*
+
+
+RUN DESTDIR= python -m pip install PDAL --prefix /build/python \
+    && python -m pip install scipy scikit-learn --prefix /build/python \
+    && cd /var/task \
+    && rm -rf pdal-python
 
 RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
 RUN rm /build/usr/lib64/*.a
