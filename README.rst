@@ -44,12 +44,12 @@ Instructions
    ::
 
       $ ./create-lambda-layer.sh
-      Published version 38 for Lambda layer pdal
-      Setting execution access to public for version 38 for Lambda layer pdal
-      Layer pdal is available at 'arn:aws:lambda:us-east-1:163178234892:layer:pdal'
-      Published version 2 for Lambda layer pdal-python
-      Setting execution access to public for version 2 for Lambda layer pdal-python
-      Layer pdal-python is available at 'arn:aws:lambda:us-east-1:163178234892:layer:pdal-python'
+      Published version 40 for Lambda layer pdal
+      Setting execution access to public for version 40 for Lambda layer pdal
+      Layer pdal is available at 'arn:aws:lambda:us-east-1:163178234892:layer:pdal:40'
+      Published version 17 for Lambda layer pdal-python
+      Setting execution access to public for version 17 for Lambda layer pdal-python
+      Layer pdal-python is available at 'arn:aws:lambda:us-east-1:163178234892:layer:pdal-python:17'
 
 .. _`Lambda Layers`: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
 .. _`GeoLambda`: https://github.com/developmentseed/geolambda

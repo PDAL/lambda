@@ -27,13 +27,15 @@ RUN \
         glib2-devel libtiff-devel pkg-config libcurl-devel;   # required for pkg-config
 
 
+#    curl -O https://mirror.centos.org/centos/6/extras/x86_64/Packages/centos-release-scl-rh-2-3.el6.centos.noarch.rpm && \
+#    curl -O https://mirror.centos.org/centos/6/extras/x86_64/Packages/centos-release-scl-7-3.el6.centos.noarch.rpm && \
 
 RUN \
     yum install -y iso-codes && \
-    curl -O http://vault.centos.org/6.5/SCL/x86_64/scl-utils/scl-utils-20120927-11.el6.centos.alt.x86_64.rpm && \
-    curl -O http://vault.centos.org/6.5/SCL/x86_64/scl-utils/scl-utils-build-20120927-11.el6.centos.alt.x86_64.rpm && \
-    curl -O http://mirror.centos.org/centos/6/extras/x86_64/Packages/centos-release-scl-rh-2-3.el6.centos.noarch.rpm && \
-    curl -O http://mirror.centos.org/centos/6/extras/x86_64/Packages/centos-release-scl-7-3.el6.centos.noarch.rpm && \
+    curl -O https://vault.centos.org/6.5/SCL/x86_64/scl-utils/scl-utils-20120927-11.el6.centos.alt.x86_64.rpm && \
+    curl -O https://vault.centos.org/6.5/SCL/x86_64/scl-utils/scl-utils-build-20120927-11.el6.centos.alt.x86_64.rpm && \
+    curl -O https://mirror.facebook.net/centos/6/extras/x86_64/Packages/centos-release-scl-rh-2-3.el6.centos.noarch.rpm && \
+    curl -O https://mirror.facebook.net/centos/6/extras/x86_64/Packages/centos-release-scl-7-3.el6.centos.noarch.rpm && \
     rpm -Uvh *.rpm  && \
     rm *.rpm &&  \
     yum install -y devtoolset-7-gcc-c++ devtoolset-7-make devtoolset-7-build ;
@@ -43,13 +45,15 @@ SHELL [ "/usr/bin/scl", "enable", "devtoolset-7"]
 RUN gcc --version
 
 
-RUN \
-    wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.sh \
-    && chmod +x cmake-${CMAKE_VERSION}-Linux-x86_64.sh \
-    && ./cmake-${CMAKE_VERSION}-Linux-x86_64.sh  --skip-license --prefix=/usr \
-    && cd /var/task \
-    && rm -rf cmake*
+#RUN \
+#    wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.sh \
+#    && chmod +x cmake-${CMAKE_VERSION}-Linux-x86_64.sh \
+#    && ./cmake-${CMAKE_VERSION}-Linux-x86_64.sh  --skip-license --prefix=/usr \
+#    && cd /var/task \
+#    && rm -rf cmake*
 
+RUN \
+    pip install cmake ninja
 
 RUN git clone https://github.com/LASzip/LASzip.git laszip \
     && cd laszip \
@@ -74,6 +78,7 @@ RUN \
         -G Ninja \
         -DCMAKE_INSTALL_PREFIX=/usr/ \
         -DCMAKE_BUILD_TYPE="Release" \
+        -DBUILD_TESTING=OFF \
      .  \
     && ninja -j ${PARALLEL} \
     && ninja install \
@@ -123,6 +128,7 @@ RUN \
         -G Ninja \
         -DCMAKE_INSTALL_PREFIX=/usr/ \
         -DCMAKE_BUILD_TYPE="Release" \
+        -DBUILD_TESTING=OFF \
      ..  \
     && ninja -j ${PARALLEL} \
     && ninja install \
@@ -167,6 +173,7 @@ RUN \
         -G "Ninja" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_TESTING=OFF \
     && ninja -j ${PARALLEL} \
     && ninja install \
     && DESTDIR= ninja install \
@@ -201,15 +208,6 @@ RUN \
     && cd /var/task \
     && rm -rf PDAL*
 
-#RUN \
-#    git clone https://github.com/PDAL/python.git pdal-python \
-#    && cd pdal-python \
-#    && python -m pip install --upgrade pip \
-#    && pip install numpy scikit-build packaging ninja cmake cython \
-#    && bash -c 'python setup.py build' \
-#    && bash -c 'python setup.py bdist_wheel' \
-#    && ls dist
-
 RUN \
     git clone https://github.com/connormanning/entwine.git --branch ${ENTWINE_VERSION} \
     && cd entwine \
@@ -224,14 +222,40 @@ RUN \
     && cd /var/task \
     && rm -rf entwine*
 
+RUN wget https://github.com/Reference-LAPACK/lapack/archive/v3.9.0.tar.gz \
+    && tar zxvf v3.9.0.tar.gz \
+    && cd lapack-3.9.0/ \
+    && mkdir -p _build \
+    && cd _build \
+    && cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -G Ninja -DBUILD_SHARED_LIBS=ON \
+    && ninja -j ${PARALLEL} \
+    && ninja install \
+    && DESTDIR=/ ninja install \
+    && cd /var/task \
+    && rm -rf lapack*
 
+RUN wget https://github.com/xianyi/OpenBLAS/archive/v0.3.10.tar.gz \
+    && tar zxvf v0.3.10.tar.gz \
+    && cd OpenBLAS-0.3.10/ \
+    && mkdir -p _build \
+    && cd _build \
+    && cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -G Ninja -DBUILD_SHARED_LIBS=ON \
+    && ninja -j ${PARALLEL} \
+    && ninja install \
+    && DESTDIR=/ ninja install \
+    && cd /var/task \
+    && rm -rf OpenBLAS*
+
+# scikit-build will respect our DESTDIR and put things in the wrong directory
 RUN DESTDIR= python -m pip install PDAL --prefix /build/python \
-    && python -m pip install scipy scikit-learn --prefix /build/python \
+    && python -m pip install pandas scipy scikit-learn --no-binary :all: --verbose --prefix /build/python \
     && cd /var/task \
     && rm -rf pdal-python
 
+RUN DESTDIR= python -m pip install pytz  --target /build/python/lib/python3.7/site-packages/
+
 RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
-RUN rm /build/usr/lib64/*.a
+RUN rm  /build/usr/lib64/*.a
 RUN ldconfig
 ADD package-pdal.sh /
 

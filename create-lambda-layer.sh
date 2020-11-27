@@ -7,12 +7,13 @@ create_layer()
     LAYERNAME="$1"
     ZIPFILE="$2"
     DESCRIPTION="$3"
+    RUNTIMES="$4"
 
     LAYER=$(aws lambda publish-layer-version \
         --layer-name $LAYERNAME \
         --description "$DESCRIPTION" \
         --zip-file fileb://./$ZIPFILE\
-        --compatible-runtimes "provided" \
+        --compatible-runtimes "$RUNTIMES" \
         --license-info BSD \
         --region $AWS_REGION \
         --profile $AWS_PROFILE)
@@ -44,5 +45,6 @@ create_layer()
     echo "Layer $LAYERNAME is available at '$LAYERARN'"
 
 }
-create_layer "pdal" "pdal-lambda-deploy.zip" "PDAL 2.2.0 software"
-create_layer "pdal-python" "sk-lambda-deploy.zip" "PDAL Python 2.3.5 software"
+
+create_layer "pdal" "pdal-lambda-deploy.zip" "PDAL 2.2.0 software" "provided"
+create_layer "pdal-python" "pdal-python-lambda-deploy.zip" "PDAL Python 2.3.5 software" "python3.7"
