@@ -137,6 +137,33 @@ RUN \
     && rm -rf zstd*
 
 
+RUN \
+    git clone https://github.com/TileDB-Inc/TileDB.git \
+    && cd TileDB \
+    && git checkout 2.1.3 \
+    && mkdir _build \
+    && cd _build \
+    && DESTDIR=/ cmake  \
+        -G "Unix Makefiles" \
+        -DCMAKE_INSTALL_PREFIX=/usr/ \
+        -DCMAKE_BUILD_TYPE="Release" \
+        -DBUILD_TESTING=OFF \
+        -DTILEDB_WERROR=OFF \
+        -DTILEDB_TESTS=OFF \
+        -DTILEDB_INSTALL_LIBDIR=lib \
+        -DTILEDB_HDFS=ON \
+        -DSANITIZER="OFF;-DCOMPILER_SUPPORTS_AVX2:BOOL=FALSE" \
+        -DTILEDB_S3=ON \
+        -DTILEDB_SERIALIZATION=ON \
+        -DTILEDB_LOG_OUTPUT_ON_FAILURE=ON \
+        -DTILEDB_AZURE=ON \
+     ..  \
+    && DESTDIR=/ make  -j ${PARALLEL} \
+    && make -C tiledb install \
+    && make -C tiledb install DESTDIR=/ \
+    && cd /var/task \
+    && rm -rf TileDB* *.gz
+
 RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GDAL_VERSION} \
     && cd gdal/gdal \
     && ./configure --prefix=/usr \
@@ -151,6 +178,7 @@ RUN git clone --branch release/ https://github.com/OSGeo/gdal.git --branch v${GD
             --with-libtiff=/usr/ \
             --with-geos=/usr/bin/geos-config \
             --with-geotiff=/usr \
+            --with-tiledb=/usr \
             --with-proj=/usr \
             --with-ogdi=no \
             --with-curl \
@@ -248,11 +276,12 @@ RUN wget https://github.com/xianyi/OpenBLAS/archive/v0.3.10.tar.gz \
 
 # scikit-build will respect our DESTDIR and put things in the wrong directory
 RUN DESTDIR= python -m pip install PDAL --prefix /build/python \
-    && python -m pip install pandas scipy scikit-learn --no-binary :all: --verbose --prefix /build/python \
-    && cd /var/task \
-    && rm -rf pdal-python
+    && python -m pip install pandas scipy scikit-learn --no-binary :all: --verbose --prefix /build/python
 
-RUN DESTDIR= python -m pip install pytz  --target /build/python/lib/python3.7/site-packages/
+RUN ldconfig
+RUN python -m pip install Shapely Fiona --no-binary :all: --prefix /build/python
+
+RUN python -m pip install pytz  --target /build/python/lib/python3.7/site-packages/
 
 RUN rm /build/usr/lib/*.la ; rm /build/usr/lib/*.a
 RUN rm  /build/usr/lib64/*.a
