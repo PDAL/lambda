@@ -1,0 +1,12 @@
+name: pdal
+channels:
+  - conda-forge
+dependencies:
+  - pdal
+  - python-pdal
+  - python=3.9
+  - entwine
+  - aws-sdk-cpp
+  - Shapely
+  - gdal
+  - pyproj
