@@ -10,7 +10,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
     - id: set-matrix
-      run: echo "::set-output name=matrix::{\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},[{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2022.03.02.08\", \"arch\":\"arm64\"}]}"
+      run: echo "::set-output name=matrix::{\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},[{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2022.03.02.08\", \"arch\":\"arm64\"}]]}"
 
 
   containers:
