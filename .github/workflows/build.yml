@@ -2,11 +2,22 @@ name: Build
 
 on: [push, pull_request, workflow_dispatch]
 
-# adapted from https://raw.githubusercontent.com/stefanprodan/podinfo/master/.github/workflows/release.yml
-#
 jobs:
+
+  config:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - id: set-matrix
+      run: echo "::set-output name=matrix::{\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},[{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2022.03.02.08\", \"arch\":\"arm64\"}]}"
+
+
   containers:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix: ${{fromJson(needs.config.outputs.matrix)}}
     env:
       PUSH_PACKAGES: ${{ github.repository_owner == 'PDAL' }}
     steps:
@@ -45,12 +56,13 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/${{ matrix.type}}
+          build-args: |
+            LAMBDA_IMAGE=${{ matrix.image }}
+            RIE_ARCH=${{ matrix.arch }}
           tags: |
-            docker.io/pdal/lambda:${{ steps.prep.outputs.VERSION }}
-            docker.io/pdal/lambda:latest
-            ghcr.io/pdal/lambdapdal:${{ steps.prep.outputs.VERSION }}
-            ghcr.io/pdal/lambdapdal:latest
+            ghcr.io/pdal/lambda:${{ steps.prep.outputs.VERSION }}
+            ghcr.io/pdal/lambda:latest
           labels: |
             org.opencontainers.image.title=${{ github.event.repository.name }}
             org.opencontainers.image.description=${{ github.event.repository.description }}
