@@ -20,7 +20,7 @@ jobs:
       fail-fast: true
       matrix: ${{fromJson(needs.config.outputs.matrix)}}
     env:
-      PUSH_PACKAGES: ${{ github.repository_owner == 'PDAL' }}
+      PUSH_PACKAGES: ${{ github.repository_owner == 'PDAL' && github.event_name != 'pull_request'}}
     steps:
       - uses: actions/checkout@v2
       - name: Set up QEMU
