@@ -62,7 +62,7 @@ ENV LD_LIBRARY_PATH=${CONDAENV}/lib
 # we're running our own conda one
 RUN rm /usr/bin/python
 
-RUN python -m pip install awslambdaric==2.0.3
+RUN python -m pip install awslambdaric==2.0.0
 ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie-${RIE_ARCH} /usr/bin/aws-lambda-rie
 
 RUN chmod +x /usr/bin/aws-lambda-rie
