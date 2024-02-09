@@ -42,4 +42,5 @@ containers are often quite slow.
 4. Push the containers
 
    ::
+
       $ ./push.sh pdal-lambda
