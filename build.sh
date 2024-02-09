@@ -29,7 +29,7 @@ docker buildx build -t $CONTAINER_NAME:amd64 . \
     --platform linux/amd64  \
     -f Dockerfile --load
 
-LAMBDA_IMAGE="amazon/aws-lambda-provided:al2.2022.03.02.08"
+LAMBDA_IMAGE="amazon/aws-lambda-provided:al2.2023.12.14.13"
 docker buildx build -t $CONTAINER_NAME:arm64 . \
     -f Dockerfile --platform linux/arm64 \
     --build-arg LAMBDA_IMAGE=$LAMBDA_IMAGE \
