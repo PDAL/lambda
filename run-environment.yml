@@ -10,3 +10,4 @@ dependencies:
   - Shapely
   - gdal
   - pyproj
+  - mamba

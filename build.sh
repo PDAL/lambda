@@ -7,6 +7,15 @@ then
     echo "container name not set! please execute './build.sh containername'"
     exit 1;
 fi
+WIPE_CACHE="$2"
+if [ -z "$WIPE_CACHE" ]; then
+    echo "Not wiping cache";
+else
+    WIPE_CACHE="--no-cache"
+    echo "Wiping cache '$WIPE_CACHE'";
+
+fi
+
 region=$AWS_DEFAULT_REGION
 if [ -z "$region" ]
 then
@@ -21,6 +30,8 @@ then
 fi
 
 CONTAINER_NAME=$identity.dkr.ecr.$region.amazonaws.com/$container
+#CONTAINER_NAME=public.ecr.aws/d4n0a3t5/$container
+
 
 LAMBDA_IMAGE="amazon/aws-lambda-provided:al2"
 docker buildx build -t $CONTAINER_NAME:amd64 . \
@@ -33,4 +44,5 @@ LAMBDA_IMAGE="amazon/aws-lambda-provided:al2.2023.12.14.13"
 docker buildx build -t $CONTAINER_NAME:arm64 . \
     -f Dockerfile --platform linux/arm64 \
     --build-arg LAMBDA_IMAGE=$LAMBDA_IMAGE \
+    $WIPE_CACHE \
     --build-arg RIE_ARCH=arm64 --load

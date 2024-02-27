@@ -20,6 +20,7 @@ ENV CONDAENV "/opt/conda/envs/${CONDA_ENV_NAME}"
 # Create the environment:
 COPY build-environment.yml .
 RUN conda env create -f build-environment.yml
+RUN mamba update --all -y
 
 COPY run-environment.yml .
 RUN conda env create -f run-environment.yml
