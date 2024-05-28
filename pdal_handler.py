@@ -31,7 +31,7 @@ def gatherImage(filename):
     try:
         outs, errs = job.communicate(timeout=15)
         logger.error(errs)
-    except TimeoutExpired:
+    except subprocess.TimeoutExpired:
         job.kill()
         outs, errs = job.communicate()
         logger.error(errs)

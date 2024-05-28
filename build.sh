@@ -30,8 +30,6 @@ then
 fi
 
 CONTAINER_NAME=$identity.dkr.ecr.$region.amazonaws.com/$container
-#CONTAINER_NAME=public.ecr.aws/d4n0a3t5/$container
-
 
 LAMBDA_IMAGE="amazon/aws-lambda-provided:al2"
 docker buildx build -t $CONTAINER_NAME:amd64 . \
@@ -40,7 +38,7 @@ docker buildx build -t $CONTAINER_NAME:amd64 . \
     --platform linux/amd64  \
     -f Dockerfile --load
 
-LAMBDA_IMAGE="amazon/aws-lambda-provided:al2.2023.12.14.13"
+LAMBDA_IMAGE="amazon/aws-lambda-provided:al2023.2024.05.01.10"
 docker buildx build -t $CONTAINER_NAME:arm64 . \
     -f Dockerfile --platform linux/arm64 \
     --build-arg LAMBDA_IMAGE=$LAMBDA_IMAGE \

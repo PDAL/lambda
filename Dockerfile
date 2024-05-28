@@ -31,9 +31,6 @@ RUN conda-pack -n ${CONDA_ENV_NAME} --dest-prefix=/var/task -o /tmp/env.tar && \
      mkdir /venv && cd /venv && tar xf /tmp/env.tar  && \
      rm /tmp/env.tar
 
-#al2.2022.03.02.08
-#FROM --platform=$TARGETPLATFORM amazon/aws-lambda-provided:al2 as al2
-
 
 FROM --platform=$TARGETPLATFORM ${LAMBDA_IMAGE:?} as al2
 
@@ -54,16 +51,9 @@ COPY --from=condasetup /venv ${CONDAENV}
 ENV PROJ_LIB ${CONDAENV}/share/proj
 ENV PROJ_NETWORK=TRUE
 ENV PATH $PATH:${CONDAENV}/bin
-ENV DTED_APPLY_PIXEL_IS_POINT=TRUE
-ENV GTIFF_REPORT_COMPD_CS=TRUE
-ENV REPORT_COMPD_CS=TRUE
-ENV OAMS_TRADITIONAL_GIS_ORDER=TRUE
-ENV XDG_DATA_HOME=${CONDAENV}/share
 ENV LD_LIBRARY_PATH=${CONDAENV}/lib
-# we're running our own conda one
-RUN rm /usr/bin/python
 
-RUN python -m pip install awslambdaric==2.0.8
+RUN /var/task/bin/python -m pip install awslambdaric==2.0.11
 ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie-${RIE_ARCH} /usr/bin/aws-lambda-rie
 
 RUN chmod +x /usr/bin/aws-lambda-rie
