@@ -56,5 +56,12 @@ containers are often quite slow.
       cd docker
       ./test-local.sh info-event.json
 
+4. Test remotely
 
+
+   ::
+
+      cd docker
+      ./test-remote.sh info-event.json
+      cat response.json
 
