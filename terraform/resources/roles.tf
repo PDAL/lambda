@@ -42,9 +42,6 @@ data "aws_iam_policy_document" "iam_for_lambda_policy_document" {
     sid       = "ReadS3"
   }
 
-
-
-
 }
 
 resource "aws_iam_policy" "lambda_logging_policy" {
