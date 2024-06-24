@@ -18,6 +18,7 @@ resource null_resource ecr_image {
 
  provisioner "local-exec" {
    command = <<EOF
+           set -e
            aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin "https://${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
            if [ "${var.arch}" = "arm64" ]; then
             LAMBDA_IMAGE="amazon/aws-lambda-provided:al2023.2024.05.01.10"
