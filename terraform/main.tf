@@ -47,3 +47,8 @@ output "info_lambda_name" {
     description = "Lambda Name"
     value = module.resources.info_lambda_name
 }
+
+output "bucket" {
+    description = "Storage bucket"
+    value = module.resources.bucket
+}

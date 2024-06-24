@@ -31,9 +31,14 @@ data "aws_iam_policy_document" "iam_for_lambda_policy_document" {
   statement {
     actions = [
         "s3:GetObject",
+        "s3:GetBucketTagging",
+        "s3:PutObjectTagging",
+        "s3:PutObject",
+        "s3:ListBucket",
+        "s3:DeleteObject",
     ]
     effect    = "Allow"
-    resources = ["*"]
+    resources = [aws_s3_bucket.storage.arn]
     sid       = "ReadS3"
   }
 
