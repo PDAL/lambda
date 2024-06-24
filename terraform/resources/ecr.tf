@@ -16,7 +16,7 @@ resource null_resource ecr_image {
    handlers = sha1(join("", [for f in fileset("${path.root}/../handlers/", "**"): filesha1("${path.root}/../handlers/${f}")]))
  }
 
-provisioner "local-exec" {
+ provisioner "local-exec" {
    command = <<EOF
            aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin "https://${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
            if [ "${var.arch}" = "arm64" ]; then
