@@ -17,30 +17,44 @@ containers are often quite slow.
       AWS_SECRET_ACCESS_KEY=somethingelse
       AWS_DEFAULT_REGION=us-east-1
 
-1. Build the containers. It should make both an arm64 and amd64 image
+1. (optional) Edit your variables
 
    ::
 
-      $ ./build.sh pdal-lambda
+      cat terraform/pdal.tfvars
 
-2. Create an ECR repository in your account for the ``pdal-lambda``
-   image
+      environment_name="pdal-lambda"
+      arch="arm64"
 
-   ::
-
-      aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION
-      aws ecr create-repository \
-         --repository-name pdal-lambda \
-         --region $AWS_DEFAULT_REGION
-
-3. Build the containers. It should make both an arm64 and amd64 image
+2. Initialize your Terraform Environment
 
    ::
 
-      $ ./build.sh pdal-lambda
+      cd terraform
+      terraform init
+      terraform validate
+      terraform apply -var-file pdal.tfvars
 
-4. Push the containers
+   The Terraform configuration will create some resources including an ECR
+   repository to store the image, a role for execution of the lambda,
+   and the lambda itself. Adjust your configuration as needed in `./terraform/resources`
+
+3. Test locally
+
+   Fire up the Lambda Docker container in one terminal:
 
    ::
 
-      $ ./push.sh pdal-lambda
+      cd docker
+      ./run-local.sh /var/task/python-entry.sh pdal_lambda.ecr.info.handler
+
+   In another terminal, issue the test. Note that it currently defaults to running
+   on port 9000. Adjust the script as necessary.
+
+   ::
+
+      cd docker
+      ./test-local.sh info-event.json
+
+
+

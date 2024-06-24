@@ -41,6 +41,8 @@ ARG TARGETARCH
 ENV TARGETPLATFORM=${TARGETPLATFORM:-linux/amd64}
 ENV TARGETARCH=${TARGETARCH:-amd64}
 
+
+
 ENV CONDAENV "/var/task"
 ENV CONDA_PREFIX "/var/task"
 ENV TARGETPLATFORM "${TARGETPLATFORM}"
@@ -52,6 +54,7 @@ ENV PROJ_LIB ${CONDAENV}/share/proj
 ENV PROJ_NETWORK=TRUE
 ENV PATH $PATH:${CONDAENV}/bin
 ENV LD_LIBRARY_PATH=${CONDAENV}/lib
+ENV HOME=/var/task/
 
 RUN /var/task/bin/python -m pip install awslambdaric==2.0.11
 ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie-${RIE_ARCH} /usr/bin/aws-lambda-rie
@@ -61,7 +64,6 @@ RUN chmod +x /usr/bin/aws-lambda-rie
 
 WORKDIR /var/task
 COPY python-entry.sh ./
-COPY pdal_handler.py ./
+COPY handlers/python/ /var/task/lib/python3.11/site-packages/pdal_lambda
 COPY root-bashrc /root/.bashrc
 ENTRYPOINT [ "/var/task/python-entry.sh" ]
-CMD ["pdal_handler.handler"]

@@ -3,4 +3,9 @@ channels:
   - conda-forge
 dependencies:
   - conda-pack
-  - mamba
+  - compilers
+  - ninja
+  - cmake
+  - pdal
+  - eigen
+  - unzip
