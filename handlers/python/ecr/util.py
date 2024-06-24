@@ -26,19 +26,19 @@ def run(cargs, working_dir=None, env = None):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf8",
-        cwd=working_dir,
+        cwd = working_dir,
         env = local_env,
     )
     ret = p.communicate()
 
+    body, error = ret
     if p.returncode != 0:
-        error = ret[1]
         logger.error(cargs)
         logger.error(error)
-        error = {"args": cargs, "error": error}
+        error = {"args": cargs, "error": error, "body": body}
         raise AttributeError(error)
 
-    return ret
+    return body
 
 
 

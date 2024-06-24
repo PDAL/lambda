@@ -23,16 +23,18 @@ def handler(event, context):
         logger.debug(f'processing {path}')
 
 
+
         command = f'pdal info --debug {path.as_uri()}'
         env = os.environ.copy()
 
         # FIXME This hardcodes our s3 region to east to read our test file
         env['AWS_REGION'] = "us-east-1"
+        # env['VERBOSE'] = "1"
 
         response = util.run(command, env = env)
         logger.debug(f'response {response}')
 
-        j = json.loads(response[0])
+        j = json.loads(response)
         infos.append(j)
 
     return infos

@@ -40,3 +40,10 @@ output "stage" {
     description = "Deployment stage"
     value = var.stage
 }
+
+
+
+output "info_lambda_name" {
+    description = "Lambda Name"
+    value = module.resources.info_lambda_name
+}
