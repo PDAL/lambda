@@ -28,6 +28,12 @@ then
     exit 1;
 fi
 
+if [ -z "$AWS_DEFAULT_PROFILE" ]
+then
+    echo "AWS_DEFAULT_PROFILE must be set!"
+    exit 1;
+fi
+
 CONTAINER="$PREFIX-$STAGE-pdal_runner"
 
 REGION=$AWS_DEFAULT_REGION
