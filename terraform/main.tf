@@ -52,3 +52,8 @@ output "bucket" {
     description = "Storage bucket"
     value = module.resources.bucket
 }
+
+output "container" {
+    description = "Container ARN"
+    value = module.resources.container
+}
