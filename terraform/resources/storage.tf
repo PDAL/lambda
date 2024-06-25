@@ -36,16 +36,15 @@ output "bucket" {
 
 locals {
     our_rendered_content = templatefile("${path.root}/../docker/info-event.tftpl", {bucket = aws_s3_bucket.storage.bucket})
+    triggers = {
+      template_file = md5(file("${path.root}/../docker/info-event.tftpl"))
+    }
 }
 
 resource "null_resource" "local" {
   triggers = {
     template = local.our_rendered_content
   }
-
-  depends_on = [
-    aws_s3_bucket.storage,
-  ]
 
   # Render to local file on machine
   # https://github.com/hashicorp/terraform/issues/8090#issuecomment-291823613

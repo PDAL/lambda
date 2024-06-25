@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "iam_for_lambda_policy_document" {
         "s3:DeleteObject",
     ]
     effect    = "Allow"
-    resources = [aws_s3_bucket.storage.arn]
+    resources = [aws_s3_bucket.storage.arn,"${aws_s3_bucket.storage.arn}/*"]
     sid       = "ReadS3"
   }
 
