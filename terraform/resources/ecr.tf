@@ -47,3 +47,7 @@ data aws_ecr_image runner_image {
     image_tag = var.arch
     depends_on = [ null_resource.ecr_image, aws_ecr_repository.runner_ecr_repo ]
 }
+
+output "container" {
+    value = "${aws_ecr_repository.runner_ecr_repo.repository_url}:${var.arch}"
+}
