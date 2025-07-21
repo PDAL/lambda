@@ -13,8 +13,8 @@ RUN printf "I'm building for TARGETPLATFORM=${TARGETPLATFORM}" \
     && printf "With uname -s : " && uname -s \
     && printf "and  uname -m : " && uname -mm
 
-ENV CONDA_ENV_NAME "pdal"
-ENV CONDAENV "/opt/conda/envs/${CONDA_ENV_NAME}"
+ENV CONDA_ENV_NAME="pdal"
+ENV CONDAENV="/opt/conda/envs/${CONDA_ENV_NAME}"
 
 
 # Create the environment:
@@ -43,16 +43,16 @@ ENV TARGETARCH=${TARGETARCH:-amd64}
 
 
 
-ENV CONDAENV "/var/task"
-ENV CONDA_PREFIX "/var/task"
-ENV TARGETPLATFORM "${TARGETPLATFORM}"
+ENV CONDAENV="/var/task"
+ENV CONDA_PREFIX="/var/task"
+ENV TARGETPLATFORM="${TARGETPLATFORM}"
 COPY --from=condasetup /venv ${CONDAENV}
 
 
 
-ENV PROJ_LIB ${CONDAENV}/share/proj
+ENV PROJ_LIB=${CONDAENV}/share/proj
 ENV PROJ_NETWORK=TRUE
-ENV PATH $PATH:${CONDAENV}/bin
+ENV PATH=$PATH:${CONDAENV}/bin
 ENV LD_LIBRARY_PATH=${CONDAENV}/lib
 ENV HOME=/var/task/
 
@@ -64,6 +64,6 @@ RUN chmod +x /usr/bin/aws-lambda-rie
 
 WORKDIR /var/task
 COPY python-entry.sh ./
-COPY handlers/python/ /var/task/lib/python3.11/site-packages/pdal_lambda
+COPY ./docker/handlers/python/ /var/task/lib/python3.11/site-packages/pdal_lambda
 COPY root-bashrc /root/.bashrc
 ENTRYPOINT [ "/var/task/python-entry.sh" ]
