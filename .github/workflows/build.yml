@@ -93,7 +93,7 @@ jobs:
           push: ${{ env.PUSH_PACKAGES == 'true' }}
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./Dockerfile
+          file: ./docker/Dockerfile.runner
           platforms: linux/${{ matrix.type}}
           build-args: |
             LAMBDA_IMAGE=${{ matrix.image }}
