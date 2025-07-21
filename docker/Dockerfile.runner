@@ -1,7 +1,7 @@
 ARG LAMBDA_IMAGE="amazon/aws-lambda-provided:al2"
 ARG RIE_ARCH="amd64"
 
-FROM --platform=$TARGETPLATFORM condaforge/miniforge3:latest as condasetup
+FROM condaforge/miniforge3:latest AS condasetup
 LABEL MAINTAINER="Howard Butler <howard@hobu.co>"
 
 ARG TARGETPLATFORM
@@ -32,7 +32,7 @@ RUN conda-pack -n ${CONDA_ENV_NAME} --dest-prefix=/var/task -o /tmp/env.tar && \
      rm /tmp/env.tar
 
 
-FROM --platform=$TARGETPLATFORM ${LAMBDA_IMAGE:?} as al2
+FROM --platform=$TARGETPLATFORM ${LAMBDA_IMAGE:?} AS al2
 
 ARG RIE_ARCH
 ARG LAMBDA_IMAGE

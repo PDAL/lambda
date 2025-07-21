@@ -92,7 +92,7 @@ jobs:
         with:
           push: ${{ env.PUSH_PACKAGES == 'true' }}
           builder: ${{ steps.buildx.outputs.name }}
-          context: .
+          context: docker
           file: ./docker/Dockerfile.runner
           platforms: linux/${{ matrix.type}}
           build-args: |
