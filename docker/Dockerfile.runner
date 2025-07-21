@@ -64,6 +64,6 @@ RUN chmod +x /usr/bin/aws-lambda-rie
 
 WORKDIR /var/task
 COPY python-entry.sh ./
-COPY ./docker/handlers/python/ /var/task/lib/python3.11/site-packages/pdal_lambda
+COPY ./handlers/python/ /var/task/lib/python3.11/site-packages/pdal_lambda
 COPY ./docker/root-bashrc /root/.bashrc
 ENTRYPOINT [ "/var/task/python-entry.sh" ]
