@@ -1,13 +1,8 @@
 name: Build
 
 on:
-  push:
-  pull_request:
-  workflow_dispatch:
-  schedule:
-    - cron: '40 7 * * 2'
-
-
+    push:
+    pull_request:
 
 jobs:
 
@@ -17,7 +12,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
     - id: set-matrix
-      run: echo "::set-output name=matrix::{\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2023.12.14.13\", \"arch\":\"arm64\"}]  }"
+      run: echo "::set-output name=matrix::{\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2025.07.17.11-arm64\", \"arch\":\"arm64\"}]  }"
 
 
   containers:
@@ -41,11 +36,24 @@ jobs:
           echo "are we pushing packages" ${{ env.PUSH_PACKAGES }}
           echo "event_name" ${{ github.event_name }}
           echo "ref" ${{ github.ref }}
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+        with:
+          daemon-config: |
+            {
+              "debug": false,
+              "features": {
+                "containerd-snapshotter": true
+              }
+            }
+
       - name: Setup Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v3
         with:
           version: latest
+
       - if: ${{ env.PUSH_PACKAGES == 'true' }}
         name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -53,6 +61,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Prepare
         id: prep
         run: |
@@ -62,8 +71,24 @@ jobs:
           fi
           echo ::set-output name=BUILD_DATE::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           echo ::set-output name=VERSION::${VERSION}
+
+      # Extract metadata (tags, labels) for Docker
+      # https://github.com/docker/metadata-action
+      - name: Extract container metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/pdal/pdal
+            docker.io/pdal/pdal
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
       - name: Build image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: ${{ env.PUSH_PACKAGES == 'true' }}
           builder: ${{ steps.buildx.outputs.name }}
@@ -84,4 +109,12 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.version=${{ steps.prep.outputs.VERSION }}
             org.opencontainers.image.created=${{ steps.prep.outputs.BUILD_DATE }}
+
+      - name: Generate artifact attestation
+        if: ${{ env.PUSH_PACKAGES == 'true' }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/pdal/pdal
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: ${{ env.PUSH_PACKAGES == 'true' }}
 
