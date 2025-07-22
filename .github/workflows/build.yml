@@ -12,7 +12,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
     - id: set-matrix
-      run: echo "::set-output name=matrix::{\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2025.07.17.11-arm64\", \"arch\":\"arm64\"}]  }"
+      run: echo "name=matrix::{\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2025.07.17.11-arm64\", \"arch\":\"arm64\"}]  }" >> $GITHUB_OUTPUT
 
   containers:
     needs: config
@@ -93,14 +93,10 @@ jobs:
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
-
-      - name: Build image
-        uses: docker/build-push-action@v6
-        id: push
-
       - name: Build image
         uses: docker/build-push-action@v6
         with:
+          id: push
           push: ${{ env.PUSH_PACKAGES == 'true' }}
           builder: ${{ steps.buildx.outputs.name }}
           context: .
