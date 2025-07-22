@@ -89,6 +89,9 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+
 
       - name: Build image
         uses: docker/build-push-action@v6
@@ -105,6 +108,7 @@ jobs:
           tags: |
             ghcr.io/pdal/lambda:${{ steps.prep.outputs.VERSION }}
             ghcr.io/pdal/lambda:latest
+          annotations: ${{ steps.meta.outputs.annotations }}
           labels: |
             org.opencontainers.image.title=${{ github.event.repository.name }}
             org.opencontainers.image.description=${{ github.event.repository.description }}
