@@ -19,7 +19,10 @@ jobs:
     needs: config
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       packages: write
+      attestations: write
+      id-token: write
     strategy:
       fail-fast: true
       matrix: ${{fromJson(needs.config.outputs.matrix)}}
