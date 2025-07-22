@@ -92,6 +92,7 @@ jobs:
 
       - name: Build image
         uses: docker/build-push-action@v6
+        id: push
         with:
           push: ${{ env.PUSH_PACKAGES == 'true' }}
           builder: ${{ steps.buildx.outputs.name }}
