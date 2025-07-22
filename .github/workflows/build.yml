@@ -12,7 +12,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
     - id: set-matrix
-      run: echo "name=matrix::{\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2025.07.17.11-arm64\", \"arch\":\"arm64\"}]  }" >> $GITHUB_OUTPUT
+      run: echo "matrix={\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2025.07.17.11-arm64\", \"arch\":\"arm64\"}]  }" >> $GITHUB_OUTPUT
 
   containers:
     needs: config
