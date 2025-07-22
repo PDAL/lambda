@@ -118,7 +118,7 @@ jobs:
         if: ${{ env.PUSH_PACKAGES == 'true' }}
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ghcr.io/pdal/pdal
+          subject-name: ghcr.io/pdal/lambda
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: ${{ env.PUSH_PACKAGES == 'true' }}
 
