@@ -12,8 +12,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
     - id: set-matrix
-      run: echo "matrix={\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2025.07.17.11-arm64\", \"arch\":\"arm64\"}]  }" >> $GITHUB_OUTPUT
-
+      run: echo "::set-output name=matrix::{\"include\":[{\"type\":\"amd64\",\"image\":\"amazon/aws-lambda-provided:al2\", \"arch\":\"x86_64\"},{\"type\":\"arm64\",\"image\":\"amazon/aws-lambda-provided:al2.2025.07.17.11-arm64\", \"arch\":\"arm64\"}]  }"
 
   containers:
     needs: config
@@ -72,6 +71,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF/refs\/tags\//}
           fi
+
           BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_OUTPUT
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
@@ -83,12 +83,13 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/pdal/pdal
+            ghcr.io/pdal/lambda
           tags: |
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
@@ -96,6 +97,9 @@ jobs:
       - name: Build image
         uses: docker/build-push-action@v6
         id: push
+
+      - name: Build image
+        uses: docker/build-push-action@v6
         with:
           push: ${{ env.PUSH_PACKAGES == 'true' }}
           builder: ${{ steps.buildx.outputs.name }}
@@ -122,6 +126,7 @@ jobs:
         if: ${{ env.PUSH_PACKAGES == 'true' }}
         uses: actions/attest-build-provenance@v2
         with:
+
           subject-name: ghcr.io/pdal/lambda
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: ${{ env.PUSH_PACKAGES == 'true' }}
